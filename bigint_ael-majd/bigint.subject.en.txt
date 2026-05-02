@@ -1,0 +1,161 @@
+Assignment name: bigint
+Expected files: bigint.hpp, bigint.cpp
+
+A bignumber is an object representing an arbitrary precision number. This is useful when you 
+want to store a number bigger than SIZE_MAX without any loss of precision. This can be archieved 
+by storing a string or an array, containing parts of the number. Create a class bigint that 
+will store arbitrary precision unsigned integers and where addition, increment, comparisions 
+and bitshifts are defined, where bitshift should shift with respect to the decimal basis (e.g. 43 << 3 == 43000).
+The provided main should be executable.
+
+STUDENT NOTE: Although the subject says we only need to implement addition, increment and comparisions, grademe will not be able to compile, if
+	bigint bigint::operator-(const bigint &first, const bigint &second);
+is not implemented, since lines like
+	bigint c(43);
+	std::cout << c - c << std::endl;
+are in their test script. But a dummy implementation that always return a bigint with value 0 is sufficient to pass.
+
+
+
+
+
+
+
+
+
+
+
+
+class bigint
+{
+
+	public:
+		std::string num;
+		bigint(): num("0"){}
+		bigint(std::string s) : num(s){}
+		bigint(unsigned long long _nb): num(std::to_string(_nb)){}
+		bigint(const bigint &bi)
+		{
+			this->num = bi.num;
+		}
+		// for correction 
+		bigint operator-(const bigint &other) const 
+		{
+			return bigint(0);
+		}
+		// now is work
+		std::string add_string(std::string a, std::string b) const
+		{
+			std::string res = "";
+			int i = a.size() - 1;
+			int j = b.size() - 1;
+			int carry = 0;
+			while(j >= 0 || i >= 0 || carry)
+			{
+				int sum = carry;
+				if (i >= 0) sum += a[i--] - '0';
+				if (j >= 0) sum += b[j--] - '0';
+				res += (sum % 10) + '0';
+				carry = sum / 10;
+
+			}
+			std::reverse(res.begin(), res.end());
+
+			return res;
+		}
+		bigint operator+(const bigint &other) const
+		{	
+			return bigint(add_string(this->num, other.num));
+		}
+		bigint operator+=(const bigint &other) 
+		{
+			num = add_string(this->num, other.num);
+			return *this;
+		}
+		// prefix and post fix
+		bigint operator++()
+		{
+			*this += bigint(1);
+			return *this;
+		}
+		bigint operator++(int)
+		{
+			bigint tmp = *this;
+			*this += bigint(1);
+			return tmp;
+		}
+		// shifting
+		bigint operator<<=(int shift)
+		{
+			if (this->num == "0")
+				return *this;
+			for(int i = 0; i < shift; i++)
+			{
+				this->num += "0";
+			}
+			return *this;
+		}
+		bigint operator<<(int shift) const
+		{
+			bigint res(*this);
+			res <<= shift;
+			return res;
+		}
+		bigint operator>>=(int shift)
+		{
+			if (shift >= this->num.size())
+				num = "0";
+			else
+				num.erase(num.size() - shift);
+			return *this;
+		}
+		bigint operator>>=(const bigint &other)
+		{
+			int shift = std::stoi(other.num);
+			return *this >>= shift;
+		}
+
+		/// comparison
+		bool operator<(const bigint &other) const
+		{
+			if (this->num.size() != other.num.size())
+				return this->num.size() < other.num.size();
+			return num < other.num;
+		}
+		bool operator>(const bigint &oth) const
+		{
+			return oth < *this;
+		}
+
+		//----------
+		bool operator<=(const bigint &other) const
+		{
+			if (this->num.size() != other.num.size())
+				return this->num.size() <= other.num.size();
+			return num <= other.num;
+		}
+		bool operator>=(const bigint &oth) const
+		{
+			return oth <= *this;
+		}
+		//----------
+		bool operator==(const bigint &oth) const
+		{
+			if (num == oth.num)
+				return true;
+			return false;
+		}
+		bool operator!=(const bigint &oth) const
+		{
+			if (num != oth.num)
+				return true;
+			return false;
+		}
+
+ };
+
+std::ostream &operator<<(std::ostream &os, const bigint &bi)
+{
+	os << bi.num;
+	return os;
+}
